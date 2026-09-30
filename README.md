@@ -57,3 +57,30 @@ uv run python eval/run_eval.py   # 200 synthetic French documents, recall per en
 ## License
 
 MIT
+
+## FR-PII-Bench v0
+
+`eval/benchmark/` holds a synthetic benchmark of 300 French administrative, accounting and legal documents
+(payslips, invoices, employment contracts, lawyer and CAF letters, fines, client e-mails) with exact span labels
+for 13 entity types, plus distractors (amounts, order numbers, event dates) that must not be masked.
+
+```bash
+uv run python eval/benchmark/generate.py 300 0        # regenerate (deterministic)
+uv run python eval/benchmark/run_presidio.py          # Presidio + presidio-fr + spaCy fr_core_news_md
+uv run python eval/benchmark/run_onnx.py nym          # Wismut/nym-pii-multilingual-small (edge-int8)
+uv run python eval/benchmark/run_onnx.py astrlink     # QuantumNous/astrlink-guard (int8)
+uv run python eval/benchmark/score.py presidio nym astrlink union union_nodate
+```
+
+Results (2026-09-30, `results.md`): recall_any / precision / false masks on 2,105 gold entities
+
+| system | recall_any | precision | false masks |
+|---|---:|---:|---:|
+| Presidio + presidio-fr + spaCy fr | 0.728 | 0.730 | 921 |
+| nym-pii-multilingual-small | 0.968 | 0.895 | 410 |
+| astrlink-guard | 0.704 | 0.768 | 587 |
+| nym + presidio-fr regex, generic DATE dropped | 0.948 | 0.978 | 92 |
+
+Takeaways: nym is the only model that finds French street addresses; the regex layer fixes its SIRET / numéro fiscal
+labelling; dropping nym's generic `DATE` label removes most false masks (invoice dates) at the cost of DOBs it did not
+tag `DATE_OF_BIRTH`. The remaining French gap is the administrative `NOM Prénom` capitalised form (nym recall 0.55).
