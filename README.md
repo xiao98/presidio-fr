@@ -60,6 +60,8 @@ MIT
 
 ## FR-PII-Bench v0
 
+Technical report (benchmark, three detectors, ablations, system design): [REPORT.md](REPORT.md). Publish the dataset to Hugging Face with `uv run hf auth login` once, then `uv run python scripts/upload_hf.py`.
+
 `eval/benchmark/` holds a synthetic benchmark of 300 French administrative, accounting and legal documents
 (payslips, invoices, employment contracts, lawyer and CAF letters, fines, client e-mails) with exact span labels
 for 13 entity types, plus distractors (amounts, order numbers, event dates) that must not be masked.
